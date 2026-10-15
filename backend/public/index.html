@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TransitOps — Platform Service</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #090d16;
+      color: #f1f5f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1.5rem;
+    }
+    .card {
+      background: #111827;
+      border: 1px solid #1f2937;
+      padding: 2.5rem;
+      border-radius: 1rem;
+      max-width: 480px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(14, 165, 233, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 0.3rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+    }
+    h1 { color: #ffffff; margin-top: 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em; }
+    p { color: #94a3b8; font-size: 0.925rem; line-height: 1.6; margin-bottom: 1.5rem; }
+    a { color: #38bdf8; text-decoration: none; font-size: 0.875rem; font-weight: 500; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="badge">TransitOps Gateway</span>
+    <h1>Static Asset Service</h1>
+    <p>TransitOps static resources and CDN gateway are active and serving assets.</p>
+    <p>System status: <a href="/api/health">Platform Health API &rarr;</a></p>
+  </div>
+</body>
+</html>
