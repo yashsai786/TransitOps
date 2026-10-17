@@ -1,22 +1,30 @@
-/**
- * TransitOps - Models Index
- * Schemas to be implemented in subsequent phases:
- * - User (Auth & RBAC)
- * - Vehicle (Registry)
- * - Driver (Management)
- * - Trip (Dispatch & Lifecycle)
- * - MaintenanceLog
- * - FuelLog
- * - Expense
- */
+import User from './User.js';
+import Role from './Role.js';
+import Vehicle from './Vehicle.js';
+import Driver from './Driver.js';
+import Trip from './Trip.js';
+import MaintenanceLog from './MaintenanceLog.js';
+import FuelLog from './FuelLog.js';
+import Expense from './Expense.js';
 
-export const registeredModels = [
-  'User',
-  'Vehicle',
-  'Driver',
-  'Trip',
-  'MaintenanceLog',
-  'FuelLog',
-  'Expense'
-];
+export {
+  User,
+  Role,
+  Vehicle,
+  Driver,
+  Trip,
+  MaintenanceLog,
+  FuelLog,
+  Expense
+};
 
+export default {
+  User,
+  Role,
+  Vehicle,
+  Driver,
+  Trip,
+  MaintenanceLog,
+  FuelLog,
+  Expense
+};
