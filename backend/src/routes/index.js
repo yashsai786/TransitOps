@@ -1,10 +1,14 @@
 import { Router } from 'express';
 import healthRoutes from './healthRoutes.js';
+import authRoutes from './authRoutes.js';
 
 const apiRouter = Router();
 
 // Platform health and status monitoring
 apiRouter.use('/health', healthRoutes);
+
+// Authentication & Identity
+apiRouter.use('/auth', authRoutes);
 
 // Base API route
 apiRouter.get('/', (req, res) => {
@@ -15,7 +19,12 @@ apiRouter.get('/', (req, res) => {
     status: 'online',
     endpoints: {
       health: '/api/health',
-      documentation: '/api/docs'
+      auth: {
+        register: 'POST /api/auth/register',
+        login: 'POST /api/auth/login',
+        me: 'GET /api/auth/me',
+        logout: 'POST /api/auth/logout'
+      }
     }
   });
 });
