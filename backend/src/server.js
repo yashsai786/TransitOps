@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import app from './app.js';
 import { connectDatabase } from './config/db.js';
+import { initializeRoles } from './services/roleService.js';
 import { logger } from './utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -21,7 +22,10 @@ const startServer = async () => {
   logger.info(`Starting TransitOps Backend API in [${process.env.NODE_ENV || 'development'}] mode...`);
 
   // Attempt database connection (graceful fallback if unconfigured)
-  await connectDatabase();
+  const isConnected = await connectDatabase();
+  if (isConnected) {
+    await initializeRoles();
+  }
 
   server.listen(PORT, () => {
     logger.success(`TransitOps Server is running on http://localhost:${PORT}`);

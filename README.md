@@ -12,7 +12,7 @@ TransitOps is a modern fleet management and transport operations platform. It st
 - **Route Intelligence (OSRM Integration):** Real-time distance and estimated travel time calculations powered by OpenStreetMap routing services.
 - **Maintenance & Work Orders:** Automated vehicle state synchronization (`In Shop` during active maintenance) to prevent conflicting trip dispatches.
 - **Operational Cost & Fuel Accounting:** Fuel efficiency metrics, cost-per-kilometer tracking, and vehicle ROI reporting with CSV data export.
-- **Role-Based Access Control:** Role segregation for Fleet Managers, Dispatchers, and Safety Officers via signed JWT authentication.
+- **Role-Based Access Control (RBAC):** Strict privilege separation across Fleet Managers, Dispatchers, Safety Officers, and Financial Analysts via signed JWT authentication and granular permissions.
 
 ---
 
@@ -22,7 +22,7 @@ TransitOps is a modern fleet management and transport operations platform. It st
 - **Backend:** Node.js, Express.js
 - **Database:** MongoDB Atlas, Mongoose
 - **Routing API:** OpenStreetMap / OSRM
-- **Authentication:** JWT, bcryptjs
+- **Authentication & Security:** JWT, bcryptjs, RBAC Middleware
 
 ---
 
@@ -35,17 +35,21 @@ transitops/
 │   │   └── index.html             # Static assets
 │   ├── src/
 │   │   ├── config/
-│   │   │   └── db.js              # Database connection
+│   │   │   ├── db.js              # Database connection
+│   │   │   └── roles.js           # Centralized roles & permissions
 │   │   ├── controllers/
+│   │   │   ├── authController.js  # Auth & RBAC controllers
 │   │   │   └── healthController.js # Health probe controller
 │   │   ├── middleware/
+│   │   │   ├── authMiddleware.js  # JWT verification middleware
+│   │   │   ├── rbacMiddleware.js  # Role & permission authorization middleware
 │   │   │   ├── requestContext.js  # Request context middleware
 │   │   │   ├── requestLogger.js   # HTTP logger
 │   │   │   ├── notFoundHandler.js # 404 handler
 │   │   │   └── errorHandler.js    # Global error handler
-│   │   ├── models/                # Mongoose schemas
-│   │   ├── routes/                # API routes
-│   │   ├── services/              # Business logic
+│   │   ├── models/                # Mongoose schemas (User, Role, Vehicle, Driver, Trip, etc.)
+│   │   ├── routes/                # API routes (authRoutes, healthRoutes)
+│   │   ├── services/              # Business logic & role initialization
 │   │   ├── utils/
 │   │   │   └── logger.js          # Console logger
 │   │   ├── validators/            # Request validators
@@ -88,6 +92,7 @@ NODE_ENV=development
 MONGO_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/transitops?retryWrites=true&w=majority
 JWT_SECRET=your_secure_secret_key
 JWT_EXPIRES_IN=7d
+ADMIN_PROVISION_SECRET=your_secure_admin_provision_secret
 CORS_ORIGIN=http://localhost:5173
 ```
 
@@ -100,7 +105,44 @@ VITE_API_BASE_URL=http://localhost:5000/api
 
 ---
 
-## 5. Getting Started
+## 5. Role-Based Access Control (RBAC)
+
+TransitOps enforces centralized role-based authorization ensuring authenticated users access only their authorized operational resources.
+
+### Predefined Roles
+
+| Role | Identifier | Description | Key Permissions |
+|---|---|---|---|
+| **Fleet Manager** | `fleet_manager` | Executive operations authority | `dashboard:read`, `vehicles:manage`, `drivers:manage`, `maintenance:manage`, `trips:manage`, `reports:read`, `finance:read` |
+| **Dispatcher** | `dispatcher` | Fleet routing & dispatch | `dashboard:read`, `vehicles:read`, `drivers:read`, `trips:create`, `trips:dispatch`, `trips:update`, `trips:read` |
+| **Safety Officer** | `safety_officer` | Compliance & safety oversight | `dashboard:read`, `drivers:read`, `drivers:safety:read`, `drivers:compliance:read`, `compliance:read`, `vehicles:read` |
+| **Financial Analyst** | `financial_analyst` | Cost & fuel auditing | `dashboard:read`, `finance:read`, `fuel:read`, `expenses:read`, `maintenance:read`, `reports:read` |
+
+### Authorization Middleware Usage
+
+The authorization layer provides reusable middleware functions chained after `authenticateToken`:
+
+```javascript
+import { authenticateToken } from '../middleware/authMiddleware.js';
+import { requireRole, requirePermission } from '../middleware/rbacMiddleware.js';
+import { ROLES, PERMISSIONS } from '../config/roles.js';
+
+// Restrict route by role
+router.get('/executive-summary', authenticateToken, requireRole(ROLES.FLEET_MANAGER), controller);
+
+// Restrict route by granular permission
+router.post('/dispatch', authenticateToken, requirePermission(PERMISSIONS.TRIPS_DISPATCH), controller);
+```
+
+### Initial Administrator Provisioning
+
+To prevent unauthorized privilege elevation:
+- Standard public registration (`POST /api/auth/register`) assigns the safe default `dispatcher` role.
+- Initial Fleet Manager provisioning is controlled through `POST /api/auth/provision-admin` requiring the `ADMIN_PROVISION_SECRET` defined in `backend/.env`.
+
+---
+
+## 6. Getting Started
 
 ### Prerequisites
 - Node.js (v18+)
@@ -136,7 +178,7 @@ npm run dev
 
 ---
 
-## 6. Scripts
+## 7. Scripts
 
 | Command | Description |
 |---|---|

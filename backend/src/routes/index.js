@@ -23,6 +23,9 @@ apiRouter.get('/', (req, res) => {
         register: 'POST /api/auth/register',
         login: 'POST /api/auth/login',
         me: 'GET /api/auth/me',
+        permissions: 'GET /api/auth/permissions',
+        roles: 'GET /api/auth/roles',
+        provisionAdmin: 'POST /api/auth/provision-admin',
         logout: 'POST /api/auth/logout'
       }
     }

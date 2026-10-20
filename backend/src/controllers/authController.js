@@ -2,6 +2,9 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import Role from '../models/Role.js';
+import { ROLE_DEFINITIONS } from '../config/roles.js';
+import { getUserPermissions } from '../middleware/rbacMiddleware.js';
+import { provisionFleetManager } from '../services/roleService.js';
 
 const JWT_DEFAULT_SECRET = 'transitops_jwt_secret_key_change_in_production';
 const JWT_DEFAULT_EXPIRY = '7d';
@@ -259,6 +262,120 @@ export const logout = (req, res) => {
   res.status(200).json({
     success: true,
     message: 'Logout successful. Please discard the stored JWT on the client side.'
+  });
+};
+
+/**
+ * Controller: Get current authenticated user's effective permissions
+ * GET /api/auth/permissions
+ */
+export const getCurrentUserPermissions = (req, res) => {
+  const user = req.user;
+  const permissions = getUserPermissions(user);
+  const roleName = user.role?.name || user.role;
+
+  res.status(200).json({
+    success: true,
+    data: {
+      userId: user._id,
+      email: user.email,
+      role: roleName,
+      permissions
+    }
+  });
+};
+
+/**
+ * Controller: Get platform roles and permission catalog
+ * GET /api/auth/roles
+ */
+export const getSystemRoles = (req, res) => {
+  res.status(200).json({
+    success: true,
+    data: {
+      roles: Object.values(ROLE_DEFINITIONS)
+    }
+  });
+};
+
+/**
+ * Controller: Controlled initial Fleet Manager provisioning
+ * POST /api/auth/provision-admin
+ */
+export const provisionAdmin = async (req, res, next) => {
+  try {
+    const { name, email, password, adminSecretKey } = req.body;
+    const secret = adminSecretKey || req.headers['x-admin-secret'];
+
+    const result = await provisionFleetManager({
+      name,
+      email,
+      password,
+      adminSecretKey: secret
+    });
+
+    res.status(result.action === 'created' ? 201 : 200).json({
+      success: true,
+      message: `Fleet Manager account successfully ${result.action}.`,
+      data: result.user
+    });
+  } catch (error) {
+    if (
+      error.message.includes('Invalid administrative secret key') ||
+      error.message.includes('ADMIN_PROVISION_SECRET')
+    ) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'PROVISIONING_FORBIDDEN',
+          message: error.message
+        }
+      });
+    }
+
+    if (error.message.includes('required') || error.message.includes('characters')) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: error.message
+        }
+      });
+    }
+
+    next(error);
+  }
+};
+
+/**
+ * Demonstration Controller: Fleet Manager only access
+ * GET /api/auth/manager-only
+ */
+export const getManagerOverview = (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Authorized: Fleet Manager executive access confirmed.',
+    data: {
+      authenticatedUser: req.user.email,
+      role: req.user.role?.name || req.user.role,
+      accessLevel: 'full_management'
+    }
+  });
+};
+
+/**
+ * Demonstration Controller: Dispatcher permission access
+ * GET /api/auth/dispatcher-access
+ */
+export const getDispatcherDashboard = (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Authorized: Dispatcher operation privileges confirmed.',
+    data: {
+      authenticatedUser: req.user.email,
+      role: req.user.role?.name || req.user.role,
+      requiredPermission: 'trips:dispatch'
+    }
   });
 };
 
